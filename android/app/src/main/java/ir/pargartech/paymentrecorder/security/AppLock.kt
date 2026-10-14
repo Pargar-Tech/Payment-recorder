@@ -16,6 +16,9 @@ object AppLock {
     /** Lock after the app has been in the background this long. */
     const val RELOCK_AFTER_MS = 30_000L
 
+    /** Process-wide: a fresh process starts locked. */
+    val session = LockSession(RELOCK_AFTER_MS)
+
     /** True if the phone has a screen lock or biometrics we can ask for. */
     fun isAvailable(context: Context): Boolean {
         val biometric = BiometricManager.from(context).canAuthenticate(AUTHENTICATORS) == BiometricManager.BIOMETRIC_SUCCESS

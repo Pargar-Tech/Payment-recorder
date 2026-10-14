@@ -67,7 +67,6 @@ class MainActivity : FragmentActivity() {
     private var lockEnabled by mutableStateOf(false)
     private var smsGranted by mutableStateOf(false)
     private var openReviewRequest by mutableStateOf(false)
-    private var stoppedAt = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +77,8 @@ class MainActivity : FragmentActivity() {
         )[MainViewModel::class.java]
 
         lockEnabled = app.prefs.lockEnabled
-        locked = lockEnabled && savedInstanceState == null
+        // Not tied to savedInstanceState: a restore after process death must still ask to unlock.
+        locked = AppLock.session.isLocked(lockEnabled)
         applySecureFlag()
         handleIntent(intent)
 
@@ -99,14 +99,14 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         smsGranted = hasPermission(Manifest.permission.READ_SMS) && hasPermission(Manifest.permission.RECEIVE_SMS)
-        if (lockEnabled && stoppedAt > 0 && SystemClock.elapsedRealtime() - stoppedAt > AppLock.RELOCK_AFTER_MS) {
-            locked = true
-        }
+        AppLock.session.onForeground(SystemClock.elapsedRealtime())
+        locked = AppLock.session.isLocked(lockEnabled)
     }
 
     override fun onStop() {
         super.onStop()
-        stoppedAt = SystemClock.elapsedRealtime()
+        // Rotation stops and recreates the activity; that isn't going to the background.
+        if (!isChangingConfigurations) AppLock.session.onBackground(SystemClock.elapsedRealtime())
     }
 
     private fun handleIntent(intent: Intent?) {
@@ -116,12 +116,16 @@ class MainActivity : FragmentActivity() {
     private fun hasPermission(p: String) =
         ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
 
-    private fun unlock() = AppLock.authenticate(this) { locked = false }
+    private fun unlock() = AppLock.authenticate(this) {
+        AppLock.session.onUnlocked()
+        locked = false
+    }
 
     private fun setLock(enabled: Boolean) {
         if (enabled) {
             // Confirm the user can actually unlock before turning the lock on.
             AppLock.authenticate(this) {
+                AppLock.session.onUnlocked()
                 app.prefs.lockEnabled = true
                 lockEnabled = true
                 applySecureFlag()
