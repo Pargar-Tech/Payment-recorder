@@ -163,7 +163,7 @@ fun ScanPrompt(onScan: (Int?) -> Unit) {
 }
 
 @Composable
-private fun ScanCard(scan: ScanState, onDismiss: () -> Unit) {
+fun ScanCard(scan: ScanState, onDismiss: () -> Unit) {
     Card(Modifier.fillMaxWidth().padding(16.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (scan) {

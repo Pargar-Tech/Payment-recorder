@@ -61,6 +61,7 @@ fun SettingsScreen(
     val rules by vm.rules.collectAsState()
     val accounts by vm.accounts.collectAsState()
     val senders by vm.senders.collectAsState()
+    val scan by vm.scan.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var newCategory by remember { mutableStateOf("") }
@@ -116,7 +117,10 @@ fun SettingsScreen(
 
             HorizontalDivider()
             Section("پیامک‌ها")
-            OutlinedButton(onClick = { rescanOpen = true }) { Text("اسکن دوباره صندوق پیامک") }
+            OutlinedButton(enabled = scan !is ScanState.Running, onClick = { rescanOpen = true }) {
+                Text("اسکن دوباره صندوق پیامک")
+            }
+            if (scan !is ScanState.Idle) ScanCard(scan, vm::dismissScanResult)
 
             if (senders.isNotEmpty()) {
                 HorizontalDivider()
