@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -116,9 +117,20 @@ class MainActivity : FragmentActivity() {
     private fun hasPermission(p: String) =
         ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
 
-    private fun unlock() = AppLock.authenticate(this) {
-        AppLock.session.onUnlocked()
-        locked = false
+    private fun unlock() {
+        if (!AppLock.isAvailable(this)) {
+            // The phone's screen lock was removed after the app lock was turned on. The prompt can't
+            // succeed any more, and without a way in the only escape is uninstalling (losing all data).
+            setLock(false)
+            AppLock.session.onUnlocked()
+            locked = false
+            Toast.makeText(this, "قفل صفحه گوشی برداشته شده؛ قفل برنامه خاموش شد", Toast.LENGTH_LONG).show()
+            return
+        }
+        AppLock.authenticate(this) {
+            AppLock.session.onUnlocked()
+            locked = false
+        }
     }
 
     private fun setLock(enabled: Boolean) {
