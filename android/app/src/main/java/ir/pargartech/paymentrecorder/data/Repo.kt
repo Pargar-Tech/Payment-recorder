@@ -24,7 +24,13 @@ enum class HandleResult { RECORDED, NEEDS_REVIEW, DUPLICATE, IGNORED }
 
 data class ScanSummary(val read: Int, val recorded: Int, val needsReview: Int)
 
-data class TxFilter(val accountId: String? = null, val scope: Scope? = null, val categoryId: String? = null)
+/** [showHidden]: also list hidden transactions (so they can be un-hidden); they never count in totals. */
+data class TxFilter(
+    val accountId: String? = null,
+    val scope: Scope? = null,
+    val categoryId: String? = null,
+    val showHidden: Boolean = false,
+)
 
 /** Records SMS as transactions; the only writer to the database. */
 class Repo(
@@ -43,7 +49,7 @@ class Repo(
     val senders: Flow<List<SenderEntity>> = db.senders().observeAll()
 
     fun transactions(from: Long, to: Long, filter: TxFilter): Flow<List<TxRow>> =
-        db.transactions().observeRange(from, to, filter.accountId, filter.scope?.name, filter.categoryId)
+        db.transactions().observeRange(from, to, filter.accountId, filter.scope?.name, filter.categoryId, filter.showHidden)
 
     fun transaction(id: String): Flow<TxRow?> = db.transactions().observe(id)
 

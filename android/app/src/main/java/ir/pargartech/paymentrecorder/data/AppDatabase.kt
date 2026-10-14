@@ -23,14 +23,21 @@ private const val TX_ROW_SELECT = """
 interface TransactionDao {
     @Query(
         TX_ROW_SELECT + """
-        WHERE t.hidden = 0 AND t.occurredAt >= :from AND t.occurredAt < :to
+        WHERE (:includeHidden OR t.hidden = 0) AND t.occurredAt >= :from AND t.occurredAt < :to
           AND (:accountId IS NULL OR t.accountId = :accountId)
           AND (:scope IS NULL OR a.scope = :scope)
           AND (:categoryId IS NULL OR t.categoryId = :categoryId)
         ORDER BY t.occurredAt DESC
         """,
     )
-    fun observeRange(from: Long, to: Long, accountId: String?, scope: String?, categoryId: String?): Flow<List<TxRow>>
+    fun observeRange(
+        from: Long,
+        to: Long,
+        accountId: String?,
+        scope: String?,
+        categoryId: String?,
+        includeHidden: Boolean,
+    ): Flow<List<TxRow>>
 
     @Query(TX_ROW_SELECT + " WHERE t.id = :id")
     fun observe(id: String): Flow<TxRow?>

@@ -71,7 +71,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
-        if (uri != null) scope.launch { exportCsv(context, uri, rows) }
+        if (uri != null) scope.launch { exportCsv(context, uri, rows.filterNot { it.tx.hidden }) }
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -104,7 +104,7 @@ fun HomeScreen(
             if (scan !is ScanState.Idle) {
                 item { ScanCard(scan, vm::dismissScanResult) }
             }
-            item { SummaryCard(rows) }
+            item { SummaryCard(rows.filterNot { it.tx.hidden }) }
             item {
                 Filters(
                     filter = filter,
@@ -234,6 +234,11 @@ private fun Filters(
                     label = { Text(s?.label() ?: "همه") },
                 )
             }
+            FilterChip(
+                selected = filter.showHidden,
+                onClick = { onChange(filter.copy(showHidden = !filter.showHidden)) },
+                label = { Text("پنهان‌ها") },
+            )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Picker(
@@ -265,8 +270,9 @@ private fun TxListItem(row: TxRow, onClick: () -> Unit) {
         modifier = Modifier.clickable(onClick = onClick),
         headlineContent = {
             Text(
-                (if (deposit) "+" else "−") + Money.formatToman(row.tx.amountRial) + " تومان",
-                color = if (deposit) DepositColor else WithdrawalColor,
+                (if (deposit) "+" else "−") + Money.formatToman(row.tx.amountRial) + " تومان" +
+                    if (row.tx.hidden) " · پنهان" else "",
+                color = if (row.tx.hidden) MaterialTheme.colorScheme.outline else if (deposit) DepositColor else WithdrawalColor,
                 fontWeight = FontWeight.Bold,
             )
         },
