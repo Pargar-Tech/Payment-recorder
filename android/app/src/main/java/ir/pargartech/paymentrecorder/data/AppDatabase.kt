@@ -125,6 +125,12 @@ interface SenderDao {
     @Query("SELECT * FROM senders")
     suspend fun all(): List<SenderEntity>
 
+    @Query("SELECT * FROM senders ORDER BY trust, sender")
+    fun observeAll(): Flow<List<SenderEntity>>
+
+    @Query("DELETE FROM senders WHERE sender = :sender")
+    suspend fun delete(sender: String)
+
     @Upsert
     suspend fun upsert(sender: SenderEntity)
 }

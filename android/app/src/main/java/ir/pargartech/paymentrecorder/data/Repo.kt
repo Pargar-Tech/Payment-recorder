@@ -40,6 +40,7 @@ class Repo(
     val rules: Flow<List<CategoryRuleEntity>> = db.categories().observeRules()
     val pendingReviews: Flow<List<ReviewItemEntity>> = db.reviews().observePending()
     val pendingReviewCount: Flow<Int> = db.reviews().observePendingCount()
+    val senders: Flow<List<SenderEntity>> = db.senders().observeAll()
 
     fun transactions(from: Long, to: Long, filter: TxFilter): Flow<List<TxRow>> =
         db.transactions().observeRange(from, to, filter.accountId, filter.scope?.name, filter.categoryId)
@@ -250,6 +251,9 @@ class Repo(
     suspend fun setSenderTrust(sender: String, trust: SenderTrust): Unit = mutex.withLock {
         setSenderTrustLocked(sender, trust, null)
     }
+
+    /** Undo "trust" or "ignore": the sender's next SMS are parsed as if we'd never heard of it. */
+    suspend fun forgetSender(sender: String): Unit = mutex.withLock { db.senders().delete(sender) }
 
     private suspend fun setSenderTrustLocked(sender: String, trust: SenderTrust, bankId: String?) {
         val now = System.currentTimeMillis()

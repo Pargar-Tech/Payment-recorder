@@ -47,6 +47,7 @@ import ir.pargartech.paymentrecorder.core.date.JalaliDate
 import ir.pargartech.paymentrecorder.core.parser.TxType
 import ir.pargartech.paymentrecorder.data.AccountEntity
 import ir.pargartech.paymentrecorder.data.CategoryEntity
+import ir.pargartech.paymentrecorder.data.SenderTrust
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,6 +60,7 @@ fun SettingsScreen(
     val categories by vm.categories.collectAsState()
     val rules by vm.rules.collectAsState()
     val accounts by vm.accounts.collectAsState()
+    val senders by vm.senders.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var newCategory by remember { mutableStateOf("") }
@@ -115,6 +117,28 @@ fun SettingsScreen(
             HorizontalDivider()
             Section("پیامک‌ها")
             OutlinedButton(onClick = { rescanOpen = true }) { Text("اسکن دوباره صندوق پیامک") }
+
+            if (senders.isNotEmpty()) {
+                HorizontalDivider()
+                Section("فرستنده‌ها")
+                Text(
+                    "فرستنده‌هایی که بانک دانسته یا نادیده گرفته‌اید. با حذف، پیامک‌های بعدی این فرستنده دوباره عادی بررسی می‌شوند.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                senders.forEach { sender ->
+                    ListItem(
+                        headlineContent = { Text(sender.sender) },
+                        supportingContent = {
+                            Text(if (sender.trust == SenderTrust.TRUSTED) "بانک — خودکار ثبت می‌شود" else "نادیده گرفته می‌شود")
+                        },
+                        trailingContent = {
+                            IconButton(onClick = { vm.forgetSender(sender.sender) }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "حذف")
+                            }
+                        },
+                    )
+                }
+            }
 
             HorizontalDivider()
             Section("دسته‌ها")

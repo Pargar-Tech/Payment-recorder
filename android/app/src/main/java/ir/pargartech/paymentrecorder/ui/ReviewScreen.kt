@@ -50,6 +50,7 @@ fun ReviewScreen(vm: MainViewModel) {
     val accounts by vm.accounts.collectAsState()
     val context = LocalContext.current
     var resolving by remember { mutableStateOf<ReviewItemEntity?>(null) }
+    var ignoring by remember { mutableStateOf<ReviewItemEntity?>(null) }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("نیاز به بررسی") })
@@ -60,11 +61,33 @@ fun ReviewScreen(vm: MainViewModel) {
                     item = item,
                     onRecord = { resolving = item },
                     onDismiss = { vm.dismissReview(item) },
-                    onIgnoreSender = { vm.setSenderTrust(item.sender, SenderTrust.IGNORED) },
+                    onIgnoreSender = { ignoring = item },
                     onShare = { shareMasked(context, item) },
                 )
             }
         }
+    }
+
+    ignoring?.let { item ->
+        // Ignoring drops every future SMS from this sender, so make it a deliberate choice.
+        AlertDialog(
+            onDismissRequest = { ignoring = null },
+            title = { Text("نادیده‌گرفتن فرستنده") },
+            text = {
+                Text(
+                    "از این به بعد هیچ پیامکی از «${item.sender}» ثبت یا بررسی نمی‌شود. " +
+                        "اگر این فرستنده بانک شماست، به‌جای آن «رد» را بزنید. " +
+                        "بعداً می‌توانید آن را از تنظیمات › فرستنده‌ها برگردانید.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.setSenderTrust(item.sender, SenderTrust.IGNORED)
+                    ignoring = null
+                }) { Text("نادیده بگیر", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { ignoring = null }) { Text("انصراف") } },
+        )
     }
 
     resolving?.let { item ->

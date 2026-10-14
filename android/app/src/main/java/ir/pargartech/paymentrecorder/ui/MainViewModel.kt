@@ -12,6 +12,7 @@ import ir.pargartech.paymentrecorder.data.Repo
 import ir.pargartech.paymentrecorder.data.ReviewItemEntity
 import ir.pargartech.paymentrecorder.data.ScanSummary
 import ir.pargartech.paymentrecorder.data.Scope
+import ir.pargartech.paymentrecorder.data.SenderEntity
 import ir.pargartech.paymentrecorder.data.SenderTrust
 import ir.pargartech.paymentrecorder.data.TxFilter
 import ir.pargartech.paymentrecorder.data.TxRow
@@ -52,6 +53,7 @@ class MainViewModel(private val repo: Repo, private val prefs: Prefs) : ViewMode
     val rules = repo.rules.state(emptyList<CategoryRuleEntity>())
     val reviews = repo.pendingReviews.state(emptyList<ReviewItemEntity>())
     val reviewCount = repo.pendingReviewCount.state(0)
+    val senders = repo.senders.state(emptyList<SenderEntity>())
 
     private val _scan = MutableStateFlow<ScanState>(ScanState.Idle)
     val scan: StateFlow<ScanState> = _scan.asStateFlow()
@@ -106,6 +108,8 @@ class MainViewModel(private val repo: Repo, private val prefs: Prefs) : ViewMode
     fun dismissReview(item: ReviewItemEntity) = launch { repo.dismissReview(item) }
 
     fun setSenderTrust(sender: String, trust: SenderTrust) = launch { repo.setSenderTrust(sender, trust) }
+
+    fun forgetSender(sender: String) = launch { repo.forgetSender(sender) }
 
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
