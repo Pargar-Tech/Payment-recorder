@@ -1,0 +1,5 @@
+<resources>
+    <!-- AppCompat parent so BiometricPrompt's fallback dialog works on Android 8/9. -->
+    <style name="Theme.PaymentRecorder" parent="Theme.AppCompat.DayNight.NoActionBar">
+    </style>
+</resources>

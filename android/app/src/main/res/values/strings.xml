@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">تراکنش‌های من</string>
+    <string name="channel_transactions">تراکنش‌های جدید</string>
+    <string name="channel_review">پیامک‌های نیازمند بررسی</string>
+</resources>
