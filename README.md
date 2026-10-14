@@ -4,6 +4,7 @@ Android app that reads Iranian bank SMS, records every deposit and withdrawal au
 
 - **Product spec:** [docs/PRD.md](docs/PRD.md)
 - **Technical design:** [docs/TECH.md](docs/TECH.md)
+- **Emulator testing:** [docs/TESTING.md](docs/TESTING.md)
 
 ## Get the APK
 
@@ -23,6 +24,7 @@ See [TECH.md › Signing](docs/TECH.md#signing) before relying on in-place updat
 ```bash
 ./gradlew :core:test           # parser + calendar tests (plain JVM)
 ./gradlew :app:assembleDebug   # Android build (needs Android SDK)
+python3 tools/seed_sms.py verify   # end-to-end check on an emulator, see docs/TESTING.md
 ```
 
 Parser not reading your bank? Use **بررسی › ارسال نمونه** in the app to share a masked sample, then add it as a test. See [TECH.md › Adding a bank format](docs/TECH.md#adding-a-bank-format).

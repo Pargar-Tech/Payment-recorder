@@ -40,6 +40,8 @@ Room Flow ─► MainViewModel ─► Compose screens (Home / Accounts / Review 
 
 `Repo` is the only writer and serializes SMS handling with a `Mutex`, so the live receiver and a running scan can't create duplicate accounts.
 
+Trusting or ignoring a sender is stored in `senders`; Settings › فرستنده‌ها lists them and deleting one returns the sender to normal parsing. Hidden transactions are listed (greyed) only with Home's «پنهان‌ها» filter, and never count in totals or the CSV export.
+
 ## Parser (`core/.../parser`)
 
 1. **Normalize** (`TextNormalizer`): Persian/Arabic digits → ASCII, ي/ك → ی/ک, Arabic separators, ZWNJ, bidi marks.
@@ -86,7 +88,7 @@ Rial `Long` everywhere; `Money.formatToman` divides by 10 for display (keeps a �
 
 - No `INTERNET`/`ACCESS_NETWORK_STATE` permission (explicitly removed in the manifest so no library can add it).
 - `allowBackup=false` + data-extraction rules exclude everything: no Google cloud backup or device transfer.
-- App lock: `BiometricPrompt` with `BIOMETRIC_WEAK | DEVICE_CREDENTIAL`; enabling requires a successful unlock; re-locks after 30 s in background; `FLAG_SECURE` while enabled.
+- App lock: `BiometricPrompt` with `BIOMETRIC_WEAK | DEVICE_CREDENTIAL`; enabling requires a successful unlock; re-locks after 30 s in background; `FLAG_SECURE` while enabled. Lock state lives in a process-scoped `LockSession`, so it survives rotation but a new process (including Android restoring the app from recents after killing it) always starts locked. If the phone's screen lock is removed while the app lock is on, unlocking turns the app lock off instead of locking the user out.
 - Full SMS text (with balances) is stored unencrypted in the app's private storage. Backups are unencrypted — the UI says so. SQLCipher is on the roadmap.
 - CSV export neutralizes formula injection (`=`, `+`, `-`, `@`).
 
@@ -107,6 +109,10 @@ Add repository secrets `SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIG
 
 `.github/workflows/android.yml` on every push/PR: `:core:test`, `:app:testDebugUnitTest`, `:app:assembleDebug`, `:app:assembleRelease`; uploads APKs (artifact `payment-recorder-apk-<run>`), the Room schema, and test reports on failure. `versionCode` = CI run number.
 
+## UI
+
+Compose + Material 3 with a fixed brand palette (`ui/Theme.kt`, light and dark; no dynamic colour so the app looks the same on every phone) and extra semantic colours in `AppTheme.colors` (deposit, withdrawal, hero gradient). Text uses **Vazirmatn** bundled in `res/font` (SIL OFL, licence in `docs/licenses/`). Shared pieces (`SectionCard`, `BankAvatar`, `ScopeBadge`, `Picker`, `ScreenTitle`) live in `ui/Components.kt`; screens compose them rather than styling Material components ad hoc.
+
 ## Building locally
 
 ```bash
@@ -114,7 +120,7 @@ Add repository secrets `SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIG
 ./gradlew :app:assembleDebug  # needs Android SDK (Android Studio)
 ```
 
-Or open the repo root in Android Studio (JDK 17).
+Or open the repo root in Android Studio (JDK 17). For an emulator run with synthetic SMS — and what to do when Google's Android servers are blocked from your network — see [TESTING.md](TESTING.md).
 
 ## Roadmap (technical)
 
