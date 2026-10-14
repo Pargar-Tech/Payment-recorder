@@ -4,7 +4,14 @@ package ir.pargartech.paymentrecorder.ui
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -21,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,10 +60,13 @@ fun ReviewScreen(vm: MainViewModel) {
     var resolving by remember { mutableStateOf<ReviewItemEntity?>(null) }
     var ignoring by remember { mutableStateOf<ReviewItemEntity?>(null) }
 
-    Column(Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("نیاز به بررسی") })
-        if (reviewItems.isEmpty()) EmptyState("موردی برای بررسی نیست.")
-        LazyColumn {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        ScreenTitle(
+            "نیاز به بررسی",
+            if (reviewItems.isEmpty()) null else fa("${reviewItems.size} پیامک بانکی که خودکار خوانده نشد"),
+        )
+        if (reviewItems.isEmpty()) EmptyState("همه پیامک‌ها خوانده شده‌اند؛ موردی برای بررسی نیست.", Icons.Filled.CheckCircle)
+        LazyColumn(contentPadding = PaddingValues(bottom = 16.dp)) {
             items(reviewItems, key = { it.id }) { item ->
                 ReviewCard(
                     item = item,
@@ -111,19 +122,37 @@ private fun ReviewCard(
     onIgnoreSender: () -> Unit,
     onShare: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("${item.sender} · ${formatDateTime(item.receivedAt)}", style = MaterialTheme.typography.labelMedium)
-            Text(reasonLabel(item.reason), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-            Text(item.body, style = MaterialTheme.typography.bodyMedium)
-            Row {
-                TextButton(onClick = onRecord) { Text("ثبت دستی") }
-                TextButton(onClick = onDismiss) { Text("رد") }
+    SectionCard(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconBubble(Icons.Filled.Warning, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer)
+            Column(Modifier.weight(1f)) {
+                Text(item.sender, style = MaterialTheme.typography.titleSmall)
+                Text(formatDateTime(item.receivedAt), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Row {
-                TextButton(onClick = onIgnoreSender) { Text("نادیده‌گرفتن فرستنده") }
-                TextButton(onClick = onShare) { Text("ارسال نمونه") }
+            Text(
+                reasonLabel(item.reason),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.tertiaryContainer)
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
+            )
+        }
+        Text(
+            item.body,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(12.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onRecord, modifier = Modifier.weight(1f)) { Text("ثبت دستی") }
+            OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("رد") }
+        }
+        Row {
+            TextButton(onClick = onIgnoreSender) {
+                Text("نادیده‌گرفتن فرستنده", color = MaterialTheme.colorScheme.error)
             }
+            TextButton(onClick = onShare) { Text("ارسال نمونه") }
         }
     }
 }

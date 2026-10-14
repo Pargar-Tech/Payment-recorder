@@ -14,7 +14,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
@@ -34,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,6 +51,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -185,11 +193,11 @@ class MainActivity : FragmentActivity() {
         BackHandler(enabled = openTx == null && tab != Tab.HOME) { tab = Tab.HOME }
 
         Scaffold(
-            // Each screen's TopAppBar handles the status bar; NavigationBar handles the nav bar.
+            // Each screen handles the status bar itself (title or hero); NavigationBar handles the nav bar.
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (openTx == null) {
-                    NavigationBar {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
                         NavItem(tab, Tab.HOME, "خانه", { Icon(Icons.Filled.Home, null) }) { tab = it }
                         NavItem(tab, Tab.ACCOUNTS, "حساب‌ها", { Icon(Icons.Filled.Person, null) }) { tab = it }
                         NavItem(tab, Tab.REVIEW, "بررسی", {
@@ -224,7 +232,17 @@ class MainActivity : FragmentActivity() {
         icon: @Composable () -> Unit,
         onSelect: (Tab) -> Unit,
     ) {
-        NavigationBarItem(selected = current == tab, onClick = { onSelect(tab) }, icon = icon, label = { Text(label) })
+        NavigationBarItem(
+            selected = current == tab,
+            onClick = { onSelect(tab) },
+            icon = icon,
+            label = { Text(label) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                indicatorColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+            ),
+        )
     }
 }
 
@@ -232,12 +250,21 @@ class MainActivity : FragmentActivity() {
 private fun LockScreen(onUnlock: () -> Unit) {
     LaunchedEffect(Unit) { onUnlock() }
     Column(
-        Modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        Modifier.fillMaxSize().background(AppTheme.colors.hero).padding(32.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(Icons.Filled.Lock, contentDescription = null)
-        Text("برنامه قفل است")
-        Button(onClick = onUnlock) { Text("باز کردن") }
+        Box(
+            Modifier.size(96.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Lock, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
+        }
+        Text("تراکنش‌های من", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+        Text("برنامه قفل است", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyLarge)
+        Button(
+            onClick = onUnlock,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = MaterialTheme.colorScheme.primary),
+        ) { Text("باز کردن") }
     }
 }
